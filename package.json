@@ -1,0 +1,15 @@
+{
+  "name": "arduino-visualizer",
+  "version": "0.1.0",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "serialport": "^10.5.0",
+    "@serialport/parser-readline": "^10.5.0"
+  }
+}
