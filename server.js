@@ -24,28 +24,58 @@ const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
 let serialInstance = null;
 let serialParser = null;
-let serialOptions = { port: process.env.SERIAL_PORT || null, baudRate: parseInt(process.env.SERIAL_BAUD || '115200', 10) };
+let serialOptions = { port: process.env.SERIAL_PORT || null, baudRate: parseInt(process.env.SERIAL_BAUD || '9600', 10) };
 
 function startSerial(portPath, baudRate) {
   if (serialInstance) return { started: false, message: 'already_running' };
   try {
-    serialInstance = new SerialPort(portPath, { baudRate: baudRate || 115200, autoOpen: true });
+    serialInstance = new SerialPort(portPath, { baudRate: baudRate || 9600, autoOpen: true });
     serialParser = serialInstance.pipe(new Readline({ delimiter: '\n' }));
-    const file = path.join(__dirname, 'data', 'owen_part_2.csv');
 
     serialParser.on('data', (line) => {
       const l = line.trim();
       if (!l) return;
-      // Append to file for persistence
-      fs.appendFile(file, l + '\n', () => {});
 
-      // Parse CSV ax,ay,az
-      const parts = l.split(',').map(s => s.trim());
-      const ax = parseFloat(parts[0]) || 0;
-      const ay = parseFloat(parts[1]) || 0;
-      const az = parseFloat(parts[2]) || 0;
-      const obj = { ax, ay, az, raw: l, ts: Date.now() };
-      broadcastToSSE(obj);
+      const tokens = l.split(',').map(s => s.trim());
+      let source = 'acc';
+      let ax = 0, ay = 0, az = 0;
+
+      if (tokens.length >= 4 && (tokens[0].toLowerCase() === 'acc')) {
+        source = 'acc';
+        ax = parseFloat(tokens[1]) || 0;
+        ay = parseFloat(tokens[2]) || 0;
+        az = parseFloat(tokens[3]) || 0;
+      } else if (tokens.length >= 4 && (tokens[0].toLowerCase() === 'ang')) {
+        source = 'ang';
+        ax = parseFloat(tokens[1]) || 0;
+        ay = parseFloat(tokens[2]) || 0;
+        az = parseFloat(tokens[3]) || 0;
+      } else if (tokens.length >= 3) {
+        // plain CSV assumed acceleration
+        source = 'acc';
+        ax = parseFloat(tokens[0]) || 0;
+        ay = parseFloat(tokens[1]) || 0;
+        az = parseFloat(tokens[2]) || 0;
+      } else {
+        return;
+      }
+
+      const ts = Date.now();
+
+      if (source === 'acc') {
+        const accFile = path.join(__dirname, 'data', 'owen_part_2.csv');
+        const lineOut = `${ax}, ${ay}, ${az}`;
+        fs.appendFile(accFile, lineOut + '\n', () => {});
+        const obj = { ax, ay, az, raw: l, ts };
+        broadcastToSSE(obj);
+      } else {
+        const angFile = path.join(__dirname, 'data', 'angles.csv');
+        const lineOut = `${ax}, ${ay}, ${az}`;
+        fs.appendFile(angFile, lineOut + '\n', () => {});
+        const obj = { ax, ay, az, raw: l, ts };
+        // broadcast to angle SSE listeners
+        broadcastToAnglesSSE(obj);
+      }
     });
 
     serialInstance.on('error', (err) => console.error('Serial error', err.message));

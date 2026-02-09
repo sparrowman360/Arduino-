@@ -24,6 +24,8 @@ Notes
 
 - New: Inclination Angle Measurement section reads `data/angles.csv` (ax,ay,az in degrees) via GET `/api/raw/angles?tail=N`, displays raw rows, plots the three angles, and updates a simple 3D airplane in real time.
 
+- Serial defaults: the app expects Arduino CSV lines prefixed with `ACC` for acceleration and `ANG` for angles, or plain CSV `ax,ay,az`. Default serial baud is `9600`.
+
 Next steps (waiting on your answers):
 - Adjust angle source mapping (if Arduino sends angles on serial, specify message format)
 - Improve 3D airplane model and controls (e.g., local axes conventions)
