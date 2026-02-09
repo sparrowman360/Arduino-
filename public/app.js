@@ -8,6 +8,7 @@ const anglesTailInput = document.getElementById('angles-tail-input');
 const anglesClearBtn = document.getElementById('angles-clear');
 const anglesTbody = document.querySelector('#angles-table tbody');
 const anglesChartEl = document.getElementById('angles-chart');
+const threeContainer = document.getElementById('three-container');
 
 let port = null;
 let reader = null;
@@ -15,6 +16,10 @@ let readerClosed = false;
 let angleData = [];
 let chart = null;
 let sampleCount = 0;
+
+// Three.js variables
+let scene, camera, renderer, cube;
+let currentTheta = 0, currentPsi = 0, currentPhi = 0;
 
 // Initialize chart
 function initChart() {
@@ -77,6 +82,72 @@ function initChart() {
     });
 }
 
+// Initialize Three.js scene with rotating cube
+function initThreeJS() {
+    const width = threeContainer.clientWidth;
+    const height = threeContainer.clientHeight;
+
+    // Scene setup
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1a1a2e);
+
+    // Camera setup
+    camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+    camera.position.z = 3;
+
+    // Renderer setup
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    threeContainer.appendChild(renderer.domElement);
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 5, 5);
+    scene.add(directionalLight);
+
+    // Create cube
+    const geometry = new THREE.BoxGeometry(2, 2, 2);
+    const materials = [
+        new THREE.MeshPhongMaterial({ color: 0xff6b6b }), // right
+        new THREE.MeshPhongMaterial({ color: 0x4ecdc4 }), // left
+        new THREE.MeshPhongMaterial({ color: 0xffe66d }), // top
+        new THREE.MeshPhongMaterial({ color: 0x95e1d3 }), // bottom
+        new THREE.MeshPhongMaterial({ color: 0xa8e6cf }), // front
+        new THREE.MeshPhongMaterial({ color: 0xff8b94 })  // back
+    ];
+    cube = new THREE.Mesh(geometry, materials);
+    scene.add(cube);
+
+    // Add edges to cube for better visibility
+    const edges = new THREE.EdgesGeometry(geometry);
+    const lineSegments = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 }));
+    cube.add(lineSegments);
+
+    // Animation loop
+    function animate() {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+    }
+    animate();
+}
+
+// Update cube rotation based on accelerometer angles
+function updateCubeRotation(theta, psi, phi) {
+    if (!cube) return;
+    currentTheta = theta * Math.PI / 180; // Convert to radians
+    currentPsi = psi * Math.PI / 180;
+    currentPhi = phi * Math.PI / 180;
+
+    // Apply rotations: theta (X), psi (Y), phi (Z)
+    cube.rotation.x = currentTheta;
+    cube.rotation.y = currentPsi;
+    cube.rotation.z = currentPhi;
+}
+
 // Update the table and chart with new data
 function updateDisplay() {
     const tailSize = parseInt(anglesTailInput.value, 10) || 50;
@@ -112,6 +183,12 @@ function updateDisplay() {
         chart.data.datasets[1].data = displayData.map(d => d.psi);
         chart.data.datasets[2].data = displayData.map(d => d.phi);
         chart.update();
+    }
+
+    // Update cube rotation with latest angle
+    if (angleData.length > 0) {
+        const latest = angleData[angleData.length - 1];
+        updateCubeRotation(latest.theta, latest.psi, latest.phi);
     }
 }
 
@@ -225,6 +302,7 @@ anglesClearBtn.addEventListener('click', () => {
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
     initChart();
+    initThreeJS();
     
     // Check if Web Serial API is available
     if (!navigator.serial) {
@@ -232,4 +310,15 @@ window.addEventListener('DOMContentLoaded', () => {
         statusDiv.className = 'status disconnected';
         connectBtn.disabled = true;
     }
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        if (renderer && camera) {
+            const width = threeContainer.clientWidth;
+            const height = threeContainer.clientHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+    });
 });

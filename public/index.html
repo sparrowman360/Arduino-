@@ -24,6 +24,7 @@
         canvas { width: 100%; height: auto; }
         .chart-container { background: #f9f9f9; padding: 15px; border-radius: 5px; }
         .alert { color: #dc3545; font-weight: bold; }
+        #three-container { width: 100%; height: 400px; background: #1a1a2e; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -46,6 +47,11 @@
                 <div style="margin-bottom: 15px;">
                     <label>Display last <input id="angles-tail-input" type="number" value="50" min="1" max="1000" style="width: 60px;" /> samples</label>
                     <button id="angles-clear">Clear Data</button>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <h3>3D Accelerometer Visualization</h3>
+                    <div id="three-container"></div>
                 </div>
 
                 <div class="data-grid">
@@ -75,6 +81,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/build/three.min.js"></script>
     <script src="/app.js"></script>
 </body>
 </html>
