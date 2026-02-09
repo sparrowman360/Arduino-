@@ -8,28 +8,10 @@
   </head>
   <body>
     <header>
-      <h1>Arduino Visualizer</h1>
+      <h1>Arduino Angle Visualizer</h1>
     </header>
 
     <main>
-      <section id="raw-data">
-        <h2>Collision Detection</h2>
-        <p>Showing last <span id="tail-size">50</span> samples from branch <strong>Owen-Part-2</strong>.</p>
-        <div id="raw-controls">
-          <label>Tail size: <input id="tail-input" type="number" value="50" min="1" max="1000" /></label>
-          <button id="refresh">Refresh Now</button>
-          <label style="margin-left:12px">Live serial port: <input id="serial-port" placeholder="/dev/ttyUSB0" /></label>
-          <label>Baud: <input id="serial-baud" type="number" value="9600" style="width:100px"/></label>
-          <button id="serial-start">Start Serial</button>
-          <button id="serial-stop">Stop Serial</button>
-        </div>
-        <table id="raw-table">
-          <thead>
-            <tr><th>#</th><th>ax (g)</th><th>ay (g)</th><th>az (g)</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </section>
       <section id="angles">
         <h2>Inclination Angle Measurement</h2>
         <p>Source: branch <strong>Angles</strong>. Showing last <span id="angles-tail">50</span> samples.</p>

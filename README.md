@@ -1,33 +1,33 @@
-# Arduino Visualizer
+# Arduino Angle Visualizer
 
-Minimal web app to visualize Arduino output. Currently implements the **Collision Detection** raw-data section that reads per-axis acceleration (ax, ay, az) in units of g from `data/owen_part_2.csv`.
+Web app to visualize Arduino incline angle measurements. Displays raw angle data, live plot, and animated 3D airplane that rotates with recorded angles.
 
-Getting started
+## Option 1: Static HTML Viewer (No Installation)
 
-1. Install dependencies:
+**Fastest way to view angle data locally:**
 
+1. Open [viewer.html](viewer.html) directly in your browser (double-click the file)
+2. Enter the path: `data/angles.csv`
+3. Click "Load Data"
+4. View raw angles, plot, and 3D airplane
+
+**Deploy to GitHub Pages:**
+- Push to GitHub
+- Go to Settings → Pages → Deploy from `main` branch
+- Access at `https://<username>.github.io/<repo>/viewer.html`
+
+## Option 2: Full Node.js App with Live Serial
+
+**For live Arduino serial streaming:**
+
+1. Install:
 ```bash
-cd /workspaces/Arduino-
 npm install
 ```
 
-2. Start the server:
-
+2. Start:
 ```bash
 npm start
-# then open http://localhost:3000 in your browser
 ```
 
-Notes
-- The raw data endpoint is GET `/api/raw/owen?tail=50` and returns the last N CSV lines as JSON.
-# Values beyond ±2g are highlighted in red in the Collision Detection table.
-
-- New: Inclination Angle Measurement section reads `data/angles.csv` (ax,ay,az in degrees) via GET `/api/raw/angles?tail=N`, displays raw rows, plots the three angles, and updates a simple 3D airplane in real time.
-
-- Serial defaults: the app expects Arduino CSV lines prefixed with `ACC` for acceleration and `ANG` for angles, or plain CSV `ax,ay,az`. Default serial baud is `9600`.
-
-Next steps (waiting on your answers):
-- Adjust angle source mapping (if Arduino sends angles on serial, specify message format)
-- Improve 3D airplane model and controls (e.g., local axes conventions)
-# Arduino-
-For BRAE 328
+3. Connect Arduino and click "Start Serial"
