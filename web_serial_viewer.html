@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ADXL335 Web Serial Viewer</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:16px}
+    #vals{font-family:monospace;background:#f4f4f4;padding:12px;border-radius:6px}
+    button{margin-right:8px}
+  </style>
+</head>
+<body>
+  <h2>ADXL335 Web Serial Viewer</h2>
+  <p>Connect directly from the browser (Chrome/Edge). No Node.js required.</p>
+  <div>
+    <button id="connect">Connect</button>
+    <button id="disconnect" disabled>Disconnect</button>
+    <span id="status">Disconnected</span>
+  </div>
+
+  <h3>Latest (g)</h3>
+  <div id="vals">no data</div>
+
+  <script>
+    let port = null;
+    let reader = null;
+    let keepReading = false;
+
+    const connectBtn = document.getElementById('connect');
+    const disconnectBtn = document.getElementById('disconnect');
+    const statusEl = document.getElementById('status');
+    const valsEl = document.getElementById('vals');
+
+    connectBtn.addEventListener('click', connect);
+    disconnectBtn.addEventListener('click', disconnect);
+
+    async function connect(){
+      if (!('serial' in navigator)){
+        alert('Web Serial not supported in this browser. Use Chrome/Edge on desktop.');
+        return;
+      }
+      try{
+        port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 9600 });
+        statusEl.textContent = 'Connected';
+        connectBtn.disabled = true;
+        disconnectBtn.disabled = false;
+        keepReading = true;
+        readLoop();
+      }catch(e){
+        console.error(e);
+        statusEl.textContent = 'Failed to open';
+      }
+    }
+
+    async function disconnect(){
+      keepReading = false;
+      if (reader) {
+        try{ await reader.cancel(); }catch(e){}
+        reader = null;
+      }
+      if (port) {
+        try{ await port.close(); }catch(e){}
+        port = null;
+      }
+      statusEl.textContent = 'Disconnected';
+      connectBtn.disabled = false;
+      disconnectBtn.disabled = true;
+    }
+
+    async function readLoop(){
+      const textDecoder = new TextDecoderStream();
+      const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+      const inputStream = textDecoder.readable;
+      reader = inputStream.getReader();
+      let buffer = '';
+      try{
+        while(keepReading){
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += value;
+          let lines = buffer.split('\n');
+          buffer = lines.pop();
+          for (const line of lines){
+            handleLine(line.trim());
+          }
+        }
+      }catch(e){
+        console.error('Read loop error', e);
+      }finally{
+        try{ reader.releaseLock(); }catch(e){}
+      }
+    }
+
+    function handleLine(line){
+      if (!line) return;
+      // expect CSV: Ax,Ay,Az
+      const parts = line.split(/[,\s]+/);
+      if (parts.length >= 3){
+        const ax = parseFloat(parts[0]);
+        const ay = parseFloat(parts[1]);
+        const az = parseFloat(parts[2]);
+        if (!isNaN(ax) && !isNaN(ay) && !isNaN(az)){
+          valsEl.textContent = `Ax=${ax.toFixed(3)} g  Ay=${ay.toFixed(3)} g  Az=${az.toFixed(3)} g`;
+          return;
+        }
+      }
+      // fallback: show raw
+      valsEl.textContent = line;
+    }
+  </script>
+</body>
+</html>

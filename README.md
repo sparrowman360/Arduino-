@@ -49,5 +49,22 @@ Troubleshooting
 - If you see no serial output: confirm the UNO is connected and the correct port is used. Verify `/dev/ttyACM0` or `/dev/ttyUSB0` exists.
 - If upload fails: make sure the correct board and port are selected and no other application (like another serial monitor) holds the port.
 - If data looks offset, verify ADXL335 wiring (Vcc, GND, X→A0, Y→A1, Z→A2) and that module Vcc matches expected reference (3.3V vs 5V).
+
+Browser Web Serial viewer (no Node.js)
+
+- A simple browser viewer `web_serial_viewer.html` is included to connect directly from a modern desktop browser and read the CSV `Ax,Ay,Az` output. This uses the Web Serial API (Chrome/Edge).
+- To use it:
+
+```bash
+# from the project folder
+python3 -m http.server 8000
+# then open in Chrome/Edge: http://localhost:8000/web_serial_viewer.html
+```
+
+- Click **Connect**, select the Arduino port and allow access. You'll see live `Ax,Ay,Az` in g.
+- Notes:
+   - Web Serial requires a secure context; serving from `http://localhost` (python http.server) is supported. Opening the file directly via `file://` may not work in all browsers.
+   - If your browser doesn't support Web Serial, use the Node.js bridge (`server.js`) or the Arduino Serial Monitor.
+
 # Arduino-
 For BRAE 328
